@@ -4,6 +4,10 @@
 
 Este exercício simula uma tarefa real do dia a dia do time de desenvolvimento.
 
+> PODE UTILIZAR IA PARA RESOLVER O DESAFIO!
+
+No dia a dia, o time de desenvolvimento tem acesso a ferramentas de IA para auxiliar na implementação, ou seja, não faz sentido proibir o uso de IA para resolver o desafio.
+
 ---
 
 ## Contexto
