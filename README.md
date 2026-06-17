@@ -75,3 +75,7 @@ Com a API rodando, acesse:
 2. `make sqlc`
 3. `make swagger`
 4. Rodar a API via debug do VS Code (`Run API (cmd/api)`)
+
+# Em caso de dúvidas
+
+Se você tiver alguma dúvida ou encontrar algum problema, entre em contato com a equipe de desenvolvimento (franklin.salesx@gmail.com) ou abra uma issue no repositório do projeto. Também pode entrar em contato pelo [LinkedIn](https://www.linkedin.com/in/franklindux/).
