@@ -42,6 +42,8 @@ make reset
 - `make swagger`: regenera a documentação Swagger em `cmd/api/docs`.
 - `make reset`: remove containers e volumes do ambiente Docker.
 
+Tem outros comandos disponíveis, veja o `Makefile` para detalhes. Mas os acima são os principais para desenvolvimento local.
+
 ## Execução da API
 
 Existe o comando:
