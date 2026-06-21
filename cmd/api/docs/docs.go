@@ -119,12 +119,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "Item cancelled successfully",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
+                    "204": {
+                        "description": "Item cancelled successfully or already returned"
                     },
                     "400": {
                         "description": "Bad request",

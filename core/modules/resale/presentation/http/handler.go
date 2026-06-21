@@ -1,15 +1,25 @@
 package http
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	"github.com/wecercle/test-devjr-fullstack-cercle/core/modules/resale/application/usecase"
+	"github.com/wecercle/test-devjr-fullstack-cercle/core/modules/resale/domain/exception"
 	httpresponse "github.com/wecercle/test-devjr-fullstack-cercle/core/modules/shared/presentation/http/response"
 )
 
-type Handler struct{}
+type Handler struct {
+	useCase *usecase.ResaleUseCase
+}
 
-func NewHandler() *Handler { return &Handler{} }
+func NewHandler(u *usecase.ResaleUseCase) *Handler {
+	return &Handler{
+		useCase: u,
+	}
+}
 
 // GetOrderItemsByCPFAndOrderID godoc
 // @Summary List order items by CPF and order ID
@@ -25,7 +35,36 @@ func NewHandler() *Handler { return &Handler{} }
 // @Failure 500 {object} map[string]string "Internal server error"
 // @Router /v1/app/users/{cpf}/orders/{order_id}/items [get]
 func (h *Handler) GetOrderItemsByCPFAndOrderID(c *gin.Context) {
-	httpresponse.Success(c, http.StatusOK, "TODO: /v1/app/users/:cpf/orders/:order_id/items")
+	cpf := c.Param("cpf")
+	orderID := c.Param("order_id")
+
+	if _, err := uuid.Parse(orderID); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid order_id format"})
+		return
+	}
+
+	items, err := h.useCase.ListItems(c.Request.Context(), cpf, orderID)
+	if err != nil {
+		if errors.Is(err, exception.ErrOrderNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error": "order not found or does not belong to user",
+			})
+			return
+		}
+
+		if errors.Is(err, exception.ErrInvalidOrderID) {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "invalid order_id format",
+			})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	httpresponse.Success(c, http.StatusOK, items)
 }
 
 // CancelOrderItem godoc
@@ -37,11 +76,38 @@ func (h *Handler) GetOrderItemsByCPFAndOrderID(c *gin.Context) {
 // @Param cpf path string true "User CPF (digits only, 11 characters)"
 // @Param order_id path string true "Order ID (UUID)"
 // @Param item_id path string true "Order Item ID (UUID)"
-// @Success 200 {object} map[string]interface{} "Item cancelled successfully"
+// @Success 204 "Item cancelled successfully or already returned"
 // @Failure 400 {object} map[string]string "Bad request"
 // @Failure 404 {object} map[string]string "Order or item not found"
 // @Failure 500 {object} map[string]string "Internal server error"
 // @Router /v1/app/users/{cpf}/orders/{order_id}/items/{item_id}/cancel [put]
 func (h *Handler) CancelOrderItem(c *gin.Context) {
-	httpresponse.Success(c, http.StatusOK, "TODO: /v1/app/users/:cpf/orders/:order_id/items/:item_id/cancel")
+	cpf := c.Param("cpf")
+	orderID := c.Param("order_id")
+	itemID := c.Param("item_id")
+
+	if _, err := uuid.Parse(orderID); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid order_id format"})
+		return
+	}
+	if _, err := uuid.Parse(itemID); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid item_id format"})
+		return
+	}
+
+	_, err := h.useCase.CancelItem(c.Request.Context(), cpf, orderID, itemID)
+	if err != nil {
+		if errors.Is(err, exception.ErrOrderItemNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "item or order not found"})
+			return
+		}
+		if errors.Is(err, exception.ErrReturnPeriodExpired) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "return deadline exceeded"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.Status(http.StatusNoContent)
 }
